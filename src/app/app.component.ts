@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { HomeComponent } from './home/home.component';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -8,5 +9,5 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  title = 'streaming';
+
 }
