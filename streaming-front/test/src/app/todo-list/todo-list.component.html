@@ -1,0 +1,7 @@
+<div>
+
+    <h1>Todo List</h1>
+    @for (todoItem of todos; track todoItem.title) {
+        <app-todo-item [todoItem]="todoItem"></app-todo-item>
+    }
+</div>

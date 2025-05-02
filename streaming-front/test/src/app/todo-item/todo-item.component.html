@@ -1,0 +1,12 @@
+<ul>
+    <li>{{todoItem.title}} | 
+        @if (todoItem.completed) {
+            <span class="green">Completed</span>
+            <button (click)="completeTodo(todoItem, false)">Vider</button>
+        }
+        @else {
+            <span class="red">Not Completed</span>
+            <button (click)="completeTodo(todoItem, true)">Compléter</button>
+        }
+    </li>
+</ul>

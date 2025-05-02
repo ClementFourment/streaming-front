@@ -1,0 +1,32 @@
+<nav class="navbar">
+    <div class="navbar-brand">
+      <a routerLink="/" class="brand-link">Mon Application</a>
+    </div>
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a routerLink="/" routerLinkActive="active" class="nav-link">
+            Accueil
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/series" routerLinkActive="active" class="nav-link">
+            Séries
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/films" routerLinkActive="active" class="nav-link">
+            Films
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/animes" routerLinkActive="active" class="nav-link">
+            Animés
+        </a>
+      </li>
+      <li class="nav-item">
+        <button (click)="logout()" class="nav-link logout-button">
+            Se déconnecter
+        </button>
+      </li>
+    </ul>
+  </nav>
