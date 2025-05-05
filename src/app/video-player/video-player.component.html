@@ -29,9 +29,11 @@
 
         <div class="upper-overlay-bottom">
             <div class="progress-bar-container" (click)="seekVideo($event)" id="progress-bar">
-                <div id="progress-bar-background" class="progress-bar-background"></div>
-                <div class="progress-bar-played" [style.width.%]="progress"></div>
-                <div class="progress-bar-thumb" [style.left.%]="progress" (mousedown)="startDrag($event)"></div>
+                <div id="progress-bar-background" class="progress-bar-background">
+                    <div class="buffer-bar" [style.width.%]="bufferPercent"></div>
+                    <div class="progress-bar-played" [style.width.%]="progress"></div>
+                    <div class="progress-bar-thumb" [style.left.%]="progress" (mousedown)="startDrag($event)"></div>
+                </div>
             </div>
         </div>
       

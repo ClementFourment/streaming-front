@@ -21,7 +21,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
 
   sources !: {title: string, img: string}[];
   videoTitle: string | null = null;
-  episode: number = 1;
+  episode!: number;
   currentTime: number = 0;
   url: string = "";
   isDragging = false;
@@ -34,6 +34,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   duration = 0;
   currentTimeFormatted = '00:00';
   durationFormatted = '00:00';
+  bufferPercent: number = 0;
 
   mouseStillTimeout: any;
 
@@ -50,7 +51,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']);
     }
-
+    
     this.interactionService.initListenInteractions();
 
 
@@ -70,6 +71,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
           this.videoService.sources = response.sources;
           this.sources = this.videoService.sources;
           this.checkTitle();
+          
           this.getUrl();
           this.getWatchProgress();
         },
@@ -78,8 +80,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
         }
       });
     }
-
-    this.episode = this.getEpisode();
+    
     
     
     
@@ -92,11 +93,21 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     }
   }
 
-  getEpisode(): number {
-
-    return 1;
+  async getEpisode(): Promise<number> {
+    if (!this.videoTitle) {
+      return 1;
+    }
+    try {
+      const response = await this.videoService.getEpisode(this.videoTitle);
+      return response.episode;
+    } catch (err) {
+      console.log(`Erreur : ${err || 'Un problème est survenu.'}`);
+      return 1;
+    }
   }
-  getUrl(){
+
+  async getUrl(){
+    this.episode = await this.getEpisode();
     if (!this.videoTitle || !this.episode) {
       return;
     }
@@ -138,11 +149,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   onVideoEnded() {
     this.isPlaying = false;
     if (this.videoTitle) {
-      
       this.nextEpisode();
-      
-
-      
     }
   }
   initVideo(url: string) {
@@ -164,11 +171,11 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
       attributeFilter: ['src']
     });
     
-    this.videoElement.nativeElement.addEventListener('loadedmetadata', () => {
-      this.duration = this.videoElement.nativeElement.duration;
-      this.durationFormatted = this.formatTime(this.duration);
-      this.updateTimes();
-    });
+    this.videoElement.nativeElement.addEventListener('loadedmetadata', this.onLoadedMetadata);
+    
+    this.videoElement.nativeElement.addEventListener('progress', this.onProgress);
+    
+    
 
     this.updateTimer = interval(100).subscribe(() => {
       if (this.isPlaying) {
@@ -190,7 +197,14 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     this.progress = (this.currentTime / this.duration) * 100;
     this.currentTimeFormatted = this.formatTime(this.currentTime);
   }
-  
+  onLoadedMetadata = () => {
+    this.duration = this.videoElement.nativeElement.duration;
+    this.durationFormatted = this.formatTime(this.duration);
+    this.updateTimes();
+  }
+  onProgress = () => {
+    this.updateBufferProgress();
+  }
 
   togglePlay(): void {
     this.isPlaying = !this.isPlaying;
@@ -210,6 +224,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     this.videoElement.nativeElement.volume = this.volume;
     this.volume = this.videoElement.nativeElement.volume;
     this.isMuted = this.volume === 0;
+    this.videoElement.nativeElement.muted = this.isMuted;
   }
 
   seekVideo(event: MouseEvent): void {
@@ -378,6 +393,16 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     }
   }
 
+  updateBufferProgress() {
+    const video = this.videoElement.nativeElement as HTMLVideoElement;
+    const buffered = video.buffered;
+    const duration = video.duration;
+  
+    if (buffered.length && duration > 0) {
+      const end = buffered.end(buffered.length - 1);
+      this.bufferPercent = (end / duration) * 100;
+    }
+  }
 
   @HostListener('window:beforeunload', ['$event'])
   handleBeforeUnload(event: BeforeUnloadEvent) {
@@ -401,15 +426,15 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     }
   }
 
-  nextEpisode():void {
+  async nextEpisode(): Promise<void> {
+
     if (this.videoTitle) {
-      this.videoService.updateWatchProgress(this.videoTitle, 0, this.episode + 1);
+      await this.videoService.updateWatchProgress(this.videoTitle, 0, this.episode + 1);
       this.router.navigate(['/dashboard'])
       .then(() => { this.router.navigate(['/video', this.videoTitle]); })
     }
   }
   ngOnDestroy(): void {
-    console.log('ngOnDestroy called');
     if (this.updateTimer) {
       this.updateTimer.unsubscribe();
     }
@@ -421,14 +446,10 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     }
     this.interactionService.removeListeners();
     this.videoElement.nativeElement.removeEventListener('ended', this.onVideoEnded);
-   
+    this.videoElement.nativeElement.removeEventListener('loadedmetadata', this.onLoadedMetadata);
+    this.videoElement.nativeElement.removeEventListener('progress', this.onProgress);
     if (this.mouseStillTimeout) {
       clearTimeout(this.mouseStillTimeout);
-    }
-
-    // update BDD
-    if (this.videoTitle) {
-      this.videoService.updateWatchProgress(this.videoTitle, this.currentTime, this.episode);
     }
   }
 }

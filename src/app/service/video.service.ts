@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +20,14 @@ export class VideoService {
     getUrl(title: string, episode: string): Observable<any> {
         return this.http.get<any>(`${this.api.apiUrl}/get-temporary-url?title=${title}&episode=${episode}`);
     }
-
+    async getEpisode(title: string): Promise<any> {
+      const token = localStorage.getItem('auth_token');
+      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+      const observable = this.http.get<any>(`${this.api.apiUrl}/get-episode?title=${title}`, {
+          headers
+      });
+      return await firstValueFrom(observable);
+    }
     getWatchProgress(title: string): Observable<any> {
         const token = localStorage.getItem('auth_token');
         const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
@@ -29,7 +36,6 @@ export class VideoService {
         });
     }
     addWatchProgress(title: string) {
-        console.log('addWatchProgress')
         const token = localStorage.getItem('auth_token');
         const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
         this.http.post<any>(
@@ -46,7 +52,7 @@ export class VideoService {
           });
     }
 
-    updateWatchProgress(title: string, time: number, episode: number) {
+    async updateWatchProgress(title: string, time: number, episode: number) {
       const token = localStorage.getItem('auth_token');
       const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
       this.http.put<any>(
@@ -55,6 +61,7 @@ export class VideoService {
           {headers}
       ).subscribe({
           next: (res) => {
+            return res;
             // console.log('Progress ajouté avec succès :', res);
           },
           error: (err) => {
