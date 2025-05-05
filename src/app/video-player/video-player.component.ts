@@ -120,6 +120,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
             return;
           }
           this.videoService.addWatchProgress(this.videoTitle);
+          console.log('ep0')
           this.episode = 0;
           this.currentTime = 0;
           return;
@@ -137,23 +138,19 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   onVideoEnded() {
     this.isPlaying = false;
     if (this.videoTitle) {
-      console.log(this.videoTitle)
-      this.videoService.updateWatchProgress(this.videoTitle, 0, this.episode + 1);
-      this.router.navigate(['/video', this.videoTitle]);
+      
+      this.nextEpisode();
+      
+
+      
     }
-    else {
-      console.log('pas de titre')
-      // ICIIIIIIII
-      console.log(this.route.paramMap)
-    }
-    
   }
   initVideo(url: string) {
     this.url = url;
     if(this.interactionService.userHasInteracted()) {
       this.isPlaying = true;
     }
-    this.videoElement.nativeElement.addEventListener('ended', this.onVideoEnded);
+    this.videoElement.nativeElement.addEventListener('ended', this.onVideoEnded.bind(this));
 
     this.observer = new MutationObserver(() => {
       document.getElementById('video-overlay')?.classList.add('active');
@@ -404,8 +401,15 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     }
   }
 
+  nextEpisode():void {
+    if (this.videoTitle) {
+      this.videoService.updateWatchProgress(this.videoTitle, 0, this.episode + 1);
+      this.router.navigate(['/dashboard'])
+      .then(() => { this.router.navigate(['/video', this.videoTitle]); })
+    }
+  }
   ngOnDestroy(): void {
-    
+    console.log('ngOnDestroy called');
     if (this.updateTimer) {
       this.updateTimer.unsubscribe();
     }
