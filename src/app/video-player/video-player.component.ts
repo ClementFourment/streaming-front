@@ -19,7 +19,7 @@ import { InteractionService } from '../service/interaction.service';
 
 export class VideoPlayerComponent implements OnInit, OnDestroy {
 
-  sources !: {title: string, img: string}[];
+  sources !: {title: string, img: string, nbEpisodes: number}[];
   videoTitle: string | null = null;
   episode!: number;
   currentTime: number = 0;
@@ -27,7 +27,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   isDragging = false;
   isPlaying = false;
   showControls = false;
-  volume = 0.5;
+  volume = 1;
   isMuted = false;
   isFullscreen = false;
   progress = 0;
@@ -35,7 +35,18 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   currentTimeFormatted = '00:00';
   durationFormatted = '00:00';
   bufferPercent: number = 0;
-
+  thumbnails!: { 
+    start: string, 
+    end: string , 
+    image: string,
+    crop: {
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+    }
+   }[];
+  nbEpisodes!: number | undefined;
   mouseStillTimeout: any;
 
   @ViewChild('video') videoElement!: ElementRef;
@@ -58,7 +69,9 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
 
     this.videoTitle = this.route.snapshot.paramMap.get('title');
     this.sources = this.videoService.sources;
-    
+    if (this.sources && this.videoTitle) {
+      this.nbEpisodes = this.sources.find(source => source.title == this.videoTitle)?.nbEpisodes;
+    }
     if (this.sources) {
       this.checkTitle();
       this.getUrl();
@@ -66,8 +79,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     }
     if (!this.sources) {
       this.videoService.getSources().subscribe({
-        next: (response: { sources: {title: string, img: string}[]}) => {
-
+        next: (response: { sources: {title: string, img: string, nbEpisodes: number}[]}) => {
           this.videoService.sources = response.sources;
           this.sources = this.videoService.sources;
           this.checkTitle();
@@ -86,7 +98,9 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     
   }
   
-
+  get episodesArray(): number[] {
+    return Array.from({ length: this.nbEpisodes ?? 0 }, (_, i) => i + 1);
+  }
   checkTitle(): void {
     if (!this.videoTitle || !this.sources.filter(source => source.title == this.videoTitle).length){
       this.router.navigate(['/dashboard']);
@@ -107,18 +121,112 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   }
 
   async getUrl(){
+    
     this.episode = await this.getEpisode();
+    this.scrollToEpisode(this.episode);
+    this.getThumbnails();
     if (!this.videoTitle || !this.episode) {
+      return;
+    }
+
+    const savedUrl = localStorage.getItem(`ep_${this.episode}`);
+    if (savedUrl) {
+      this.initVideo(savedUrl);
       return;
     }
     this.videoService.getUrl(this.videoTitle, String(this.episode)).subscribe({
       next: (response: {url: string}) => {
+        localStorage.setItem(`ep_${this.episode}`, response.url);
         this.initVideo(response.url);
       },
       error: (err) => {
         console.log(`Erreur : ${err?.error?.message || 'Un problème est survenu.'}`);
       }
     }); 
+  }
+  async getThumbnails() {
+    if (!this.videoTitle || !this.episode) {
+      return;
+    }
+    this.videoService.getThumbnails(this.videoTitle, String(this.episode)).subscribe({
+      next: (response: any) => {
+        this.thumbnails = response.thumbnails;
+        if (this.thumbnails.length > 0) {
+          this.handleThumbnailPreload(this.thumbnails[0].image);
+        }
+      },
+      error: (err) => {
+        console.log(`Erreur : ${err?.error?.message || 'Un problème est survenu.'}`);
+      }
+    });
+    
+  }
+  private async handleThumbnailPreload(imageUrl: string) {
+    try {
+      await this.preloadImage(imageUrl);
+    } catch (err) {
+      console.error('Erreur lors du préchargement de la vignette :', err);
+    }
+  }
+  
+  showThumbnail(event: MouseEvent) {
+
+    const thumbnailDiv = document.getElementById('thumbnail')as HTMLDivElement;
+    const timeDiv = document.getElementById('thumbnail-time')as HTMLDivElement;
+    const progressBar = document.getElementById('progress-bar-background') as HTMLElement;
+    const rect = progressBar.getBoundingClientRect();
+    let position = (event.clientX - rect.left) / rect.width;
+    if (position < 0) {
+      position = 0;
+    }
+    if (position > this.duration) {
+      position = 1;
+    }
+    const pointedTime = this.duration * position;
+    const pointedTimeFormatted = this.formatTime(pointedTime);
+
+
+    thumbnailDiv.style.display = 'flex';
+    timeDiv.innerHTML = String(pointedTimeFormatted)
+
+    const img = document.getElementById('thumbnail-picture') as HTMLImageElement;
+    // img.src = this.thumbnails
+    const thumbnail = this.thumbnails.find(c => pointedTime >= this.parseTimeString(c.start) && pointedTime < this.parseTimeString(c.end));
+    
+    if (thumbnail) {
+      if (img.src !== thumbnail.image) {
+        img.src = thumbnail.image;
+      }
+
+
+      thumbnailDiv.style.left = `${ position * rect.width - rect.left + 10 }px`;
+
+
+
+      img.style.width = 'auto';
+      img.style.height = 'auto';
+      img.style.objectFit = 'none';
+      img.style.position = 'absolute';
+
+      img.style.left = `-${thumbnail.crop.x * 2 / 3}px`;
+      img.style.top = `-${thumbnail.crop.y * 2 / 3}px`;
+      
+      img.parentElement!.style.width = `${thumbnail.crop.width * 2 / 3}px`;
+      img.parentElement!.style.height = `${thumbnail.crop.height * 2 / 3}px`;
+      img.parentElement!.style.overflow = 'hidden';
+    }
+  }
+  hideThumbnail() {
+    const thumbnailDiv = document.getElementById('thumbnail')as HTMLDivElement;
+    thumbnailDiv.style.display = 'none';
+  }
+  async preloadImage(url: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = url;
+      img.onload = () => resolve();
+      img.onerror = (err) => reject(err);
+    });
   }
   getWatchProgress() {
     if (!this.videoTitle) {
@@ -191,6 +299,22 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
 
     this.volume = this.videoElement.nativeElement.volume;
     this.volume = this.volume;
+
+    this.storeNextEpisodeUrl();
+  }
+  storeNextEpisodeUrl(){
+    if (!this.videoTitle) {
+      return;
+    }
+    this.videoService.getUrl(this.videoTitle, String(this.episode + 1)).subscribe({
+      next: (response: {url: string}) => {
+        const nextEpisodeKey = `ep_${this.episode + 1}`;
+        localStorage.setItem(nextEpisodeKey , response.url)
+      },
+      error: (err) => {
+        console.log(`Erreur : ${err?.error?.message || 'Un problème est survenu.'}`);
+      }
+    }); 
   }
   updateTimes() {
     this.currentTime = this.videoElement.nativeElement.currentTime;
@@ -267,6 +391,21 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     const seconds = Math.floor(time % 60).toString().padStart(2, '0');
     return `${minutes}:${seconds}`;
   }
+  parseTimeString(timeStr: string): number {
+    const parts = timeStr.split(':').map(Number);
+  
+    if (parts.length === 2) {
+      const [minutes, seconds] = parts;
+      return minutes * 60 + seconds;
+    }
+  
+    if (parts.length === 3) {
+      const [hours, minutes, seconds] = parts;
+      return hours * 3600 + minutes * 60 + seconds;
+    }
+  
+    throw new Error('Invalid time format');
+  }
 
 
   showVolume() {
@@ -278,12 +417,27 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     document.getElementById('progress-bar')?.classList.remove('active');
   }
 
+  showEpisodes() {
+    document.getElementById('list-episodes')?.classList.add('active');
+    document.getElementById('progress-bar')?.classList.add('active');
+    this.scrollToEpisode(this.episode);
+  }
+  hideEpisodes() {
+    document.getElementById('list-episodes')?.classList.remove('active');
+    document.getElementById('progress-bar')?.classList.remove('active');
+  }
+
   @HostListener('document:keydown', ['$event'])
     handleKeyboardEvent(event: KeyboardEvent) {
       if (event.key === 'ArrowUp') {
         this.handleArrowUp();
       } else if (event.key === 'ArrowDown') {
         this.handleArrowDown();
+      }
+      if (event.key === 'ArrowLeft') {
+        this.rewindVideo();
+      } else if (event.key === 'ArrowRight') {
+        this.forwardVideo();
       }
       if (event.key === 'Space' || event.code === 'Space') {
         this.togglePlay();
@@ -337,6 +491,15 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     else {
       this.videoElement.nativeElement.currentTime = this.duration;
       this.updateTimes();
+    }
+  }
+
+  scrollToEpisode(index: number): void {
+    console.log('scrolle')
+    const episodesContainer = document.getElementById('episodes-container') as HTMLDivElement;
+    const element = episodesContainer.querySelector(`#episode-${index}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'instant', block: 'center' });
     }
   }
 
@@ -427,13 +590,33 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   }
 
   async nextEpisode(): Promise<void> {
+    const nbEpisodes = this.sources.find(source => source.title == this.videoTitle)?.nbEpisodes;
+    if (!nbEpisodes || nbEpisodes <= this.episode) {
+      return;
+    }
 
+    this.isPlaying = false;
+    this.videoElement.nativeElement.pause();
     if (this.videoTitle) {
       await this.videoService.updateWatchProgress(this.videoTitle, 0, this.episode + 1);
       this.router.navigate(['/dashboard'])
       .then(() => { this.router.navigate(['/video', this.videoTitle]); })
     }
   }
+
+  async navigateToEpisode(episode: number): Promise<void> {
+    if (episode == this.episode) {
+      return;
+    }
+    this.isPlaying = false;
+    this.videoElement.nativeElement.pause();
+    if (this.videoTitle) {
+      await this.videoService.updateWatchProgress(this.videoTitle, 0, episode);
+      this.router.navigate(['/dashboard'])
+      .then(() => { this.router.navigate(['/video', this.videoTitle]); })
+    }
+  }
+
   ngOnDestroy(): void {
     if (this.updateTimer) {
       this.updateTimer.unsubscribe();

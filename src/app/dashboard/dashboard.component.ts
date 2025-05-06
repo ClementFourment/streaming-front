@@ -13,7 +13,7 @@ import { FormTitlePipe } from '../service/form-title.pipe';
 })
 export class DashboardComponent implements OnInit {
 
-  sources !: {title: string, img: string}[];
+  sources !: {title: string, img: string, nbEpisodes: number}[];
   test: boolean = false;
 
   constructor(private videoService: VideoService, private authService: AuthService, private router: Router) {}
@@ -25,13 +25,13 @@ export class DashboardComponent implements OnInit {
 
 
     this.videoService.getSources().subscribe({
-      next: (response: { sources: {title: string, img: string}[]}) => {
+      next: (response: { sources: {title: string, img: string, nbEpisodes: number}[]}) => {
         this.videoService.sources = response.sources;
         this.sources = this.videoService.sources;
       },
       error: (err) => {
         
-        console.log(`Erreur : ${err?.error?.message || 'Un problème est survenu.'}`);
+        console.log(`Erreur : ${err?.error?.message || 'Un problème est survenu. Impossible de récupérer les sources'}`);
       }
     });
   }

@@ -13,6 +13,7 @@
                         <div class="card-image">
                             <img [src]="source.img">
                         </div>
+                        <div id="nbEpisodes">{{ source.nbEpisodes }} épisode{{source.nbEpisodes > 0 ? 's' : ''}}</div>
                         <div class="center">
                             <span class="card-title">{{source.title | formTitle }}</span>
                         </div>

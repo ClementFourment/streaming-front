@@ -44,7 +44,7 @@ video {
     text-align: center;
     top: 1px;
     &.active {
-        // display: block;
+        display: block;
     }
 }
 @keyframes spin {
@@ -52,8 +52,7 @@ video {
     100% { transform: rotate(360deg); }
 }
 .video-overlay {
-    // display: none;
-    display: flex;
+    display: none;
     position: absolute;
     top: 0;
     left: 0;
@@ -62,7 +61,7 @@ video {
     color: white;
     flex-direction: column;
     justify-content: space-between;
-    // opacity: 0;
+    opacity: 0;
     transition: opacity 0.3s ease;
     background: rgba(0, 0, 0, 0.5);
     z-index: 10;
@@ -127,7 +126,7 @@ video {
         >* {
             margin-right: 30px;
         }
-        #rewind-button,#forward-button {
+        #rewind-button, #forward-button {
             font-size: 0px;
             padding: 0;
             margin-top: 6px;
@@ -150,6 +149,67 @@ video {
     }
     .controls-right {
         justify-content: flex-end;
+        >*:not(.fullscreen-button) {
+            margin-left: 30px;
+        }
+        #next-episode, #list-episodes-button {
+            font-size: 0px;
+            padding: 0;
+            margin-top: 6px;
+            svg{
+
+                transform: scale(1.5);
+            }
+        }
+
+        #list-episodes {
+            display: none;
+
+            position: absolute;
+            background-color: transparent;
+            width: 600px;
+            height: 600px;
+            bottom: 50px;
+            right: 0;
+
+            justify-content: center;
+            &.active {
+                display: flex;
+            }
+
+            #episodes-container {
+                background-color: rgb(85, 85, 85);
+                width: 600px;
+                height: 527px;
+                overflow-y: scroll;
+                border: transparent 5px solid;
+            }
+
+            .episode {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                cursor: pointer;
+                padding: 15px 25px;
+                font-size: 20px;
+                user-select: none;
+                &:hover{
+                    background-color: #3f3f3f;
+                    font-weight: bold;
+                }
+                &.active {
+                    background-color: #3f3f3fc3;
+                    font-weight: bold;
+                    cursor: default;
+                    &:hover {
+                        background-color: #3f3f3fc3;
+                    }
+                }
+                .invisible {
+                    opacity: 0;
+                }
+            }
+        }
     }
 }
 
@@ -193,11 +253,14 @@ button {
 
 
 .progress-bar-container {
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: center;
     margin-bottom: 10px;
     border-radius: 0.1em;
     transition: opacity 0.5s ease-out;
     position: relative;
-    height: 0.2rem;
+    height: 1rem;
     cursor: pointer;
     margin-right: 1rem;
     margin-left: 1rem;
@@ -207,34 +270,36 @@ button {
     }
 
     &:hover {
-
+        .progress-bar-background, .progress-bar-played {
+            height: 0.6rem;
+        }
+        
+        
+        
     }
 }
 
 .progress-bar-background {
+    transition: all 0.2s ease-out;
+    height: 0.2rem;
     position: absolute;
     border-radius: 0.1em;
-    top: 0;
-    left: 0;
     width: 100%;
-    height: 100%;
     background-color: rgba(255, 255, 255, 0.2);
 }
 
 .progress-bar-played {
+    transition: height 0.2s ease-out;
+    height: 0.2rem;
     z-index: 2;
     position: absolute;
     border-radius: 0.1em;
-    top: 0;
-    left: 0;
-    height: 100%;
     background-color: #e50914;
 }
 
 .progress-bar-thumb {
     z-index: 3;
     position: absolute;
-    top: -0.4rem;
     width: 1rem;
     height: 1rem;
     border-radius: 50%;
@@ -319,4 +384,36 @@ button {
     font-size: 0.9rem;
     margin-left: 0.5rem;
     margin-right: 1rem;
+    white-space: nowrap;
+}
+
+
+#thumbnail {
+    position: absolute;
+
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #3f3f3f;
+    bottom: 160px;
+    min-width: 50px;
+    pointer-events: none;
+    transform: scale(2);
+}
+#thumbnail-picture-container {
+    position: relative;
+    overflow: hidden;
+}
+#thumbnail-picture {
+    position: absolute;
+    object-fit: none;
+  }
+#thumbnail-time {
+    margin-top: 2px;
+    margin-bottom: -2px;
+    height: 14px;
+    font-size: 10px;
+    width: 100%;
+    text-align: center;
 }

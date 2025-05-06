@@ -28,12 +28,18 @@
     <div class="overlay-bottom">
 
         <div class="upper-overlay-bottom">
-            <div class="progress-bar-container" (click)="seekVideo($event)" id="progress-bar">
+            <div (mousemove)="showThumbnail($event)" (mouseleave)="hideThumbnail()" class="progress-bar-container" (click)="seekVideo($event)" id="progress-bar">
                 <div id="progress-bar-background" class="progress-bar-background">
                     <div class="buffer-bar" [style.width.%]="bufferPercent"></div>
                     <div class="progress-bar-played" [style.width.%]="progress"></div>
-                    <div class="progress-bar-thumb" [style.left.%]="progress" (mousedown)="startDrag($event)"></div>
                 </div>
+                <div class="progress-bar-thumb" [style.left.%]="progress" (mousedown)="startDrag($event)"></div>
+            </div>
+            <div id="thumbnail" class="thumbnail-container">
+                <div id="thumbnail-picture-container">
+                    <img id="thumbnail-picture" alt="">
+                </div>
+                <div id="thumbnail-time">0:00</div>
             </div>
         </div>
       
@@ -81,8 +87,33 @@
             <div class="title">
                 <p><b>{{ (videoTitle) ? (videoTitle | formTitle) : '' }} : épisode {{ episode }} </b></p>
             </div>
-
             <div class="controls-right">
+
+                <button id="next-episode" (click)="nextEpisode()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" role="img" viewBox="0 0 24 24" width="24" height="24" data-icon="NextEpisodeStandard" aria-hidden="true">
+                        <path fill="currentColor" d="M22 3H20V21H22V3ZM4.28615 3.61729C3.28674 3.00228 2 3.7213 2 4.89478V19.1052C2 20.2787 3.28674 20.9977 4.28615 20.3827L15.8321 13.2775C16.7839 12.6918 16.7839 11.3082 15.8321 10.7225L4.28615 3.61729ZM4 18.2104V5.78956L14.092 12L4 18.2104Z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                    </svg>
+                </button>
+
+                <div (mouseenter)="showEpisodes()" (mouseleave)="hideEpisodes()">
+                    <button id="list-episodes-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" role="img" viewBox="0 0 24 24" width="24" height="24" data-icon="EpisodesStandard" aria-hidden="true">
+                            <path fill="currentColor" d="M8 5H22V13H24V5C24 3.89543 23.1046 3 22 3H8V5ZM18 9H4V7H18C19.1046 7 20 7.89543 20 9V17H18V9ZM0 13C0 11.8954 0.895431 11 2 11H14C15.1046 11 16 11.8954 16 13V19C16 20.1046 15.1046 21 14 21H2C0.895431 21 0 20.1046 0 19V13ZM14 19V13H2V19H14Z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                        </svg>
+                    </button> 
+                    
+                    <div id="list-episodes">
+                        <div id="episodes-container" (mouseleave)="hideEpisodes()">
+                            @for (episode of episodesArray; track $index) {
+                                <div [attr.id]="'episode-' + $index" class="episode {{episode == this.episode ? 'active' : ''}}" (click)="navigateToEpisode(episode)">
+                                    <p>Épisode {{episode}}</p>
+                                    <i class="fas fa-arrow-right {{episode == this.episode ? 'invisible' : ''}}" style="font-size: 30px;"></i>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
                 <span class="time-display">{{ currentTimeFormatted }} / {{ durationFormatted }}</span>
 
                 <button class="fullscreen-button" aria-label="Plein écran" (click)="toggleFullscreen()">

@@ -9,7 +9,7 @@ import { firstValueFrom, Observable } from 'rxjs';
 })
 export class VideoService {
 
-    sources !: {title: string, img: string}[];
+    sources !: {title: string, img: string, nbEpisodes: number}[];
 
     constructor(private http: HttpClient, private router: Router, private api: ApiService) { }
 
@@ -19,6 +19,9 @@ export class VideoService {
 
     getUrl(title: string, episode: string): Observable<any> {
         return this.http.get<any>(`${this.api.apiUrl}/get-temporary-url?title=${title}&episode=${episode}`);
+    }
+    getThumbnails(title: string, episode: string): Observable<any> {
+      return this.http.get<any>(`${this.api.apiUrl}/get-thumbnails?title=${title}&episode=${episode}`);
     }
     async getEpisode(title: string): Promise<any> {
       const token = localStorage.getItem('auth_token');

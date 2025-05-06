@@ -15,5 +15,20 @@
     cursor: pointer;
     &:hover {
         transform: scale(1.05);
+        #nbEpisodes {
+            display: block;
+        }
     }
+}
+
+#nbEpisodes {
+    display: none;
+    position: absolute;
+    font-style: italic;
+    left: 50%;
+    top: 50%;
+    width: 100%;
+    background-color: #121212b5;
+    text-align: center;
+    transform: translate(-50%, -100%);
 }
