@@ -1,27 +1,30 @@
-<div class="video-container"
-     (mouseenter)="showControls = true"
-     (mouseleave)="showControls = false">
+<div class="video-container" (mouseenter)="showControls = true" (mouseleave)="showControls = false">
 
-  <video #video id="video" controls width="100%" height="auto" autoplay playsinline
+  <video #video id="video" [attr.controls]="false" width="100%" height="auto" autoplay playsinline webkit-playsinline 
          [src]="url"
-         (click)="togglePlay()">
+         >
   </video>
 
-  <div>
+</div>
+
+<div>
     <div id="loader" class="loader active"></div>
-  </div>
-  <div id="video-overlay" class="video-overlay" [class.controls-visible]="showControls">
+</div>
+
+
+
+<div id="video-overlay" class="video-overlay" [class.controls-visible]="showControls" (click)="toggleOverlay()">
 
     <!-- Top Controls -->
     <div class="overlay-top">
-      <button class="back-button" aria-label="Retour" (click)="goBack()">
+        <button class="back-button" aria-label="Retour" (click)="goBack()">
         <i class="fas fa-arrow-left" style="font-size: 30px;"></i>
-      </button>
+        </button>
     </div>
 
     <!-- Center Play/Pause -->
-    <div class="overlay-middle" (click)="togglePlay()" (dblclick)="toggleFullscreen()">
-      
+    <div class="overlay-middle" (click)="isMobileOrTablet() ? '' : togglePlay()" (dblclick)="isMobileOrTablet() ? mobileStepTime($event) : toggleFullscreen()">
+        
     </div>
 
     <!-- Bottom Controls -->
@@ -42,7 +45,7 @@
                 <div id="thumbnail-time">0:00</div>
             </div>
         </div>
-      
+        
         <div class="lower-overlay-bottom">
 
             <div class="controls-left">
@@ -105,7 +108,7 @@
                     <div id="list-episodes">
                         <div id="episodes-container" (mouseleave)="hideEpisodes()">
                             @for (episode of episodesArray; track $index) {
-                                <div [attr.id]="'episode-' + $index" class="episode {{episode == this.episode ? 'active' : ''}}" (click)="navigateToEpisode(episode)">
+                                <div [attr.id]="'episode-' + ($index+1)" class="episode {{episode == this.episode ? 'active' : ''}}" (click)="navigateToEpisode(episode)">
                                     <p>Épisode {{episode}}</p>
                                     <i class="fas fa-arrow-right {{episode == this.episode ? 'invisible' : ''}}" style="font-size: 30px;"></i>
                                 </div>
@@ -127,5 +130,4 @@
 
         </div>
     </div>
-  </div>
 </div>

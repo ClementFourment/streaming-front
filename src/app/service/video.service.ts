@@ -10,22 +10,29 @@ import { firstValueFrom, Observable } from 'rxjs';
 export class VideoService {
 
     sources !: {title: string, img: string, nbEpisodes: number}[];
+    NGROK_HEADER = new HttpHeaders().set('ngrok-skip-browser-warning', 'true');
 
     constructor(private http: HttpClient, private router: Router, private api: ApiService) { }
 
     getSources(): Observable<any> {
-        return this.http.get<any>(`${this.api.apiUrl}/get-sources`);
+        return this.http.get<any>(`${this.api.apiUrl}/get-sources`, {
+          headers: this.NGROK_HEADER
+        });
     }
 
     getUrl(title: string, episode: string): Observable<any> {
-        return this.http.get<any>(`${this.api.apiUrl}/get-temporary-url?title=${title}&episode=${episode}`);
+        return this.http.get<any>(`${this.api.apiUrl}/get-temporary-url?title=${title}&episode=${episode}`, {
+          headers: this.NGROK_HEADER
+        });;
     }
     getThumbnails(title: string, episode: string): Observable<any> {
-      return this.http.get<any>(`${this.api.apiUrl}/get-thumbnails?title=${title}&episode=${episode}`);
+      return this.http.get<any>(`${this.api.apiUrl}/get-thumbnails?title=${title}&episode=${episode}`, {
+        headers: this.NGROK_HEADER
+      });;
     }
     async getEpisode(title: string): Promise<any> {
       const token = localStorage.getItem('auth_token');
-      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+      const headers = this.NGROK_HEADER.set('Authorization', `Bearer ${token}`);
       const observable = this.http.get<any>(`${this.api.apiUrl}/get-episode?title=${title}`, {
           headers
       });
@@ -33,7 +40,7 @@ export class VideoService {
     }
     getWatchProgress(title: string): Observable<any> {
         const token = localStorage.getItem('auth_token');
-        const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+        const headers = this.NGROK_HEADER.set('Authorization', `Bearer ${token}`);
         return this.http.get<any>(`${this.api.apiUrl}/get-watchprogress?title=${title}`, {
             headers
         });

@@ -93,9 +93,31 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
       });
     }
     
+    this.fullScreenOnMobileLandscape();
     
+    // document.addEventListener('fullscreenchange', (e) => {
+    //   if (!this.isMobileOrTablet()) {
+    //     return;
+    //   }
+    //   if (document.fullscreenElement && !this.isFullscreen) {
+    //     // document.exitFullscreen();
+    //   }
+      
+    // });
     
-    
+  }
+  
+  fullScreenOnMobileLandscape() {
+    if (this.isMobileOrTablet()) {
+      this.isFullscreen = false;
+      this.toggleFullscreen();
+
+      if ((screen.orientation as any).lock) {
+        (screen.orientation as any).lock('landscape').catch((err: any) => {
+          console.warn('Erreur lock orientation:', err);
+        });
+      }
+    }
   }
   
   get episodesArray(): number[] {
@@ -360,7 +382,10 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     this.updateTimes();
 
   }
-
+  isMobileOrTablet(): boolean {
+    const ua = navigator.userAgent.toLowerCase();
+    return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
+  }
   toggleFullscreen(): void {
     const elem = this.elRef.nativeElement;
     this.isFullscreen = !this.isFullscreen;
@@ -372,7 +397,15 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
       } else if ((<any>elem).msRequestFullscreen) { // IE11
         (<any>elem).msRequestFullscreen();
       }
-    } else {
+      if (this.isMobileOrTablet()) {
+        if ((screen.orientation as any).lock) {
+          (screen.orientation as any).lock('landscape').catch((err: any) => {
+            console.warn('Erreur lock orientation:', err);
+          });
+        }
+      }
+    } 
+    else {
       if (document.exitFullscreen) {
         document.exitFullscreen();
       } else if ((<any>document).webkitExitFullscreen) {
@@ -442,9 +475,9 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
       if (event.key === 'Space' || event.code === 'Space') {
         this.togglePlay();
       }
-      if (event.key === 'f' || event.key === 'F') {
-        this.toggleFullscreen();
-      }
+      // if (event.key === 'f' || event.key === 'F') {
+      //   this.toggleFullscreen();
+      // }
     }
   handleArrowUp(): void {
     if (this.volume <= 0.9) {
@@ -524,6 +557,9 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     window.removeEventListener('mouseup', this.stopDrag);
   };
 
+  toggleOverlay() {
+    
+  }
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent): void {
     this.resetMouseStillTimer();
@@ -532,7 +568,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   onMouseClick(event: MouseEvent): void {
     this.resetMouseStillTimer();
   }
-
+  
   resetMouseStillTimer(): void {
     if (this.mouseStillTimeout) {
       this.showControls = true;
@@ -556,6 +592,18 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     }
   }
 
+  mobileStepTime(event: MouseEvent) {
+    const clickX = event.clientX;
+    const screenWidth = window.innerWidth;
+    const forwardButton = document.getElementById('forward-button') as HTMLButtonElement;
+    const rewindButton = document.getElementById('rewind-button') as HTMLButtonElement;
+    if (clickX > screenWidth / 2 + screenWidth*0.1) {
+      forwardButton.click();
+    } 
+    else if (clickX < screenWidth / 2 - screenWidth*0.1) {
+      rewindButton.click();
+    }
+  }
   updateBufferProgress() {
     const video = this.videoElement.nativeElement as HTMLVideoElement;
     const buffered = video.buffered;
