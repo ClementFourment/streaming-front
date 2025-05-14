@@ -69,7 +69,7 @@ video {
 }
 
 .video-overlay {
-    display: none;
+    display: none; 
     position: absolute;
     top: 0;
     left: 0;
@@ -90,7 +90,15 @@ video {
     button {
         pointer-events: none;
     }
+    &.controls-visible {
+        opacity: 1;
+        pointer-events: auto; /* Active les boutons quand visible */
+        button {
+            pointer-events: auto;
+        }
+    }
 }
+
 .back-button {
     z-index: 2;
 }
@@ -98,14 +106,7 @@ video {
 .hide-cursor {
     cursor: none!important;
 }
-.video-overlay.controls-visible {
-    opacity: 1;
-    // background-color: transparent;
-    pointer-events: auto; /* Active les boutons quand visible */
-    button {
-        pointer-events: auto;
-    }
-}
+
 
 .overlay-top {
     display: flex;

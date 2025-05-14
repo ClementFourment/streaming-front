@@ -50,7 +50,7 @@
 
         <div class="upper-overlay-bottom">
             <div (mousemove)="showThumbnail($event)" (mouseleave)="hideThumbnail()" class="progress-bar-container" (click)="seekVideo($event)" id="progress-bar">
-                <div id="progress-bar-background" class="progress-bar-background"
+                <div #progressBar id="progress-bar-background" class="progress-bar-background"
                     (mousedown)="startDrag($event)"
                     (touchstart)="startDragMobile($event)">
                     <div class="buffer-bar" [style.width.%]="bufferPercent"></div>

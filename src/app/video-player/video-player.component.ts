@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, OnDestroy, HostListener, View
 import { ActivatedRoute, Router } from '@angular/router';
 import { VideoService } from '../service/video.service';
 import { AuthService } from '../service/auth.service';
-import { interval, Subscription } from 'rxjs';
+import { interval, Subscription, timeout } from 'rxjs';
 import { formatDate, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FormTitlePipe } from '../service/form-title.pipe';
@@ -50,6 +50,8 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   mouseStillTimeout: any;
 
   @ViewChild('video') videoElement!: ElementRef;
+  @ViewChild('progressBar') progressBar!: ElementRef;
+
   private observer!: MutationObserver; //pour le loader
 
   private updateTimer!: Subscription;
@@ -112,6 +114,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     }
     
     this.fullScreenOnMobileLandscape();
+    
     
     // document.addEventListener('fullscreenchange', (e) => {
     //   if (!this.isMobileOrTablet()) {
@@ -230,8 +233,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
 
     const thumbnailDiv = document.getElementById('thumbnail')as HTMLDivElement;
     const timeDiv = document.getElementById('thumbnail-time')as HTMLDivElement;
-    const progressBar = document.getElementById('progress-bar-background') as HTMLElement;
-    const rect = progressBar.getBoundingClientRect();
+    const rect = this.progressBar.nativeElement.getBoundingClientRect();
     let position = (event.clientX - rect.left) / rect.width;
     if (position < 0) {
       position = 0;
@@ -420,8 +422,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
 
   seekVideo(event: MouseEvent): void {
     
-    const progressBar = document.getElementById('progress-bar-background') as HTMLElement;
-    const rect = progressBar.getBoundingClientRect();
+    const rect = this.progressBar.nativeElement.getBoundingClientRect();
     const position = (event.clientX - rect.left) / rect.width;
     this.videoElement.nativeElement.currentTime = this.duration * position;
     this.updateTimes();
@@ -518,6 +519,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
         this.forwardVideo();
       }
       if (event.key === 'Space' || event.code === 'Space') {
+        
         this.togglePlay();
       }
       // if (event.key === 'f' || event.key === 'F') {
@@ -552,7 +554,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
       this.videoElement.nativeElement.currentTime -= 10;
       this.updateTimes();
       if (this.videoElement.nativeElement.ended) {
-        this.videoElement.nativeElement.play;
+        this.videoElement.nativeElement.play();
         this.isPlaying = true;
       }
     }
@@ -591,8 +593,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   onDrag = (event: MouseEvent): void => {
     if (!this.isDragging) return;
   
-    const progressBar = document.getElementById('progress-bar-background') as HTMLElement;
-    const rect = progressBar.getBoundingClientRect();
+    const rect = this.progressBar.nativeElement.getBoundingClientRect();
     const position = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1); // clamp 0-1
     this.videoElement.nativeElement.currentTime = this.duration * position;
     this.updateTimes();
@@ -612,10 +613,9 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     window.addEventListener('touchend', this.stopDragMobile);
   }
   onDragMobile = (event: TouchEvent): void => {
-    this.resetMouseStillTimer()
     if (!this.isDragging) return;
-    const progressBar = document.getElementById('progress-bar-background') as HTMLElement;
-    const rect = progressBar.getBoundingClientRect();
+    this.scheduleMouseStillReset();
+    const rect = this.progressBar.nativeElement.getBoundingClientRect();
     const position = Math.min(Math.max((event.targetTouches[0].clientX - rect.left) / rect.width, 0), 1); // clamp 0-1
     this.videoElement.nativeElement.currentTime = this.duration * position;
     this.updateTimes();
@@ -632,35 +632,48 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   toggleOverlay() {
     
   }
+
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent): void {
-    this.resetMouseStillTimer();
+    this.scheduleMouseStillReset();
   }
+
   @HostListener('document:click', ['$event'])
   onMouseClick(event: MouseEvent): void {
-    this.resetMouseStillTimer();
+    this.scheduleMouseStillReset();
   }
   
-  resetMouseStillTimer(): void {
+  scheduleMouseStillReset(): void {
+    this.showVideoControls();
+  
     if (this.mouseStillTimeout) {
-      this.showControls = true;
-      document.getElementById('video-overlay')?.classList.add('controls-visible')
-      document.body.classList.remove('hide-cursor');
-      document.getElementById('video-overlay')?.classList.remove('hide-cursor');
       clearTimeout(this.mouseStillTimeout);
     }
-
+  
     this.mouseStillTimeout = setTimeout(() => {
       this.onMouseStill();
     }, 2000);
   }
 
+  showVideoControls(): void {
+    this.showControls = true;
+    document.body.classList.remove('hide-cursor');
+    const overlay = document.getElementById('video-overlay');
+    overlay?.classList.add('controls-visible');
+    overlay?.classList.remove('hide-cursor');
+  }
+  
+  hideVideoControls(): void {
+    this.showControls = false;
+    document.body.classList.add('hide-cursor');
+    const overlay = document.getElementById('video-overlay');
+    overlay?.classList.remove('controls-visible');
+    overlay?.classList.add('hide-cursor');
+  }
+
   onMouseStill(): void {
     if (this.isPlaying) {
-      document.getElementById('video-overlay')?.classList.remove('controls-visible')
-      document.body.classList.add('hide-cursor');
-      document.getElementById('video-overlay')?.classList.add('hide-cursor');
-      this.showControls = false;
+      this.hideVideoControls();
     }
   }
 
