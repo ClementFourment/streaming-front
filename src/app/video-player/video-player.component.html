@@ -50,11 +50,17 @@
 
         <div class="upper-overlay-bottom">
             <div (mousemove)="showThumbnail($event)" (mouseleave)="hideThumbnail()" class="progress-bar-container" (click)="seekVideo($event)" id="progress-bar">
-                <div id="progress-bar-background" class="progress-bar-background">
+                <div id="progress-bar-background" class="progress-bar-background"
+                    (mousedown)="startDrag($event)"
+                    (touchstart)="startDragMobile($event)">
                     <div class="buffer-bar" [style.width.%]="bufferPercent"></div>
                     <div class="progress-bar-played" [style.width.%]="progress"></div>
                 </div>
-                <div class="progress-bar-thumb" [style.left.%]="progress" (mousedown)="startDrag($event)"></div>
+                <div class="progress-bar-thumb" 
+                    [style.left.%]="progress" 
+                    (mousedown)="startDrag($event)"
+                    (touchstart)="startDragMobile($event)">
+                </div>
             </div>
             <div id="thumbnail" class="thumbnail-container">
                 <div id="thumbnail-picture-container">

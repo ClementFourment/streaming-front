@@ -248,6 +248,10 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
 
     const img = document.getElementById('thumbnail-picture') as HTMLImageElement;
     // img.src = this.thumbnails
+    
+    thumbnailDiv.style.left = `${ position * rect.width - rect.left + 10 }px`;
+
+
     const thumbnail = this.thumbnails.find(c => pointedTime >= this.parseTimeString(c.start) && pointedTime < this.parseTimeString(c.end));
     
     if (thumbnail) {
@@ -256,7 +260,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
       }
 
 
-      thumbnailDiv.style.left = `${ position * rect.width - rect.left + 10 }px`;
+      
 
 
 
@@ -583,6 +587,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     window.addEventListener('mousemove', this.onDrag);
     window.addEventListener('mouseup', this.stopDrag);
   }
+  
   onDrag = (event: MouseEvent): void => {
     if (!this.isDragging) return;
   
@@ -597,6 +602,32 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     window.removeEventListener('mousemove', this.onDrag);
     window.removeEventListener('mouseup', this.stopDrag);
   };
+
+  startDragMobile(event: TouchEvent): void {
+    event.preventDefault();
+    this.isDragging = true;
+    window.addEventListener('touchmove', this.onDragMobile);
+    window.addEventListener('touchcancel', this.stopDragMobile);
+    window.addEventListener('touchleave', this.stopDragMobile);
+    window.addEventListener('touchend', this.stopDragMobile);
+  }
+  onDragMobile = (event: TouchEvent): void => {
+    this.resetMouseStillTimer()
+    if (!this.isDragging) return;
+    const progressBar = document.getElementById('progress-bar-background') as HTMLElement;
+    const rect = progressBar.getBoundingClientRect();
+    const position = Math.min(Math.max((event.targetTouches[0].clientX - rect.left) / rect.width, 0), 1); // clamp 0-1
+    this.videoElement.nativeElement.currentTime = this.duration * position;
+    this.updateTimes();
+  };
+  stopDragMobile = (): void => {
+    this.isDragging = false;
+    window.removeEventListener('touchmove', this.onDragMobile);
+    window.removeEventListener('touchcancel', this.stopDragMobile);
+    window.removeEventListener('touchleave', this.stopDragMobile);
+    window.removeEventListener('touchend', this.stopDragMobile);
+  };
+
 
   toggleOverlay() {
     
