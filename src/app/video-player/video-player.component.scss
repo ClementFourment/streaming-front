@@ -59,6 +59,15 @@ video {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+.hidden {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    user-select: none;
+}
+
 .video-overlay {
     display: none;
     position: absolute;
@@ -91,7 +100,7 @@ video {
 }
 .video-overlay.controls-visible {
     opacity: 1;
-    background-color: transparent;
+    // background-color: transparent;
     pointer-events: auto; /* Active les boutons quand visible */
     button {
         pointer-events: auto;
@@ -114,6 +123,42 @@ video {
     display: flex;
     justify-content: center;
     align-items: center;
+
+    >div {
+        width: 100%;
+        height: 100%;
+    }
+    >button {
+        display: none;
+        &.play-pause-button {
+            position: absolute;
+            left: 50%;
+            top: calc(50% + 45px);
+            transform: translate(-50%, -50%);
+        }
+        &#rewind-button {
+            position: absolute;
+            left: 30%;
+            top: calc(50% + 45px);
+            transform: translate(-50%, -50%);
+        }
+        &#forward-button {
+            position: absolute;
+            left: 70%;
+            top: calc(50% + 45px);
+            transform: translate(-50%, -50%);
+        }
+        &.title {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            p {
+                font-size: 15px;
+            }
+        }
+    }
+    
 }
 .overlay-bottom {
     position: relative;
@@ -471,6 +516,9 @@ button {
                     font-size: 24px;
                 }
             }
+            #volume {
+                margin-top: -92px;
+            }
         }
         .title {
             p {
@@ -524,71 +572,62 @@ button {
     }
 }
 @media (max-width: 768px) {
+    .overlay-middle {
+        
+        >button {
+            display: block;
+        }
+        .title {
+            pointer-events: none;
+            user-select: none;
+            cursor: default;
+        }
+    }
     .lower-overlay-bottom {
         .controls-left {
-            flex-basis: 0%;
-            >* {
-                margin-right: 15px;
-            }
+            
             .play-pause-button{
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
+                display: none;
             }
             #rewind-button {
-                position: absolute;
-                top: 50%;
-                left: 30%;
-                transform: translate(-50%, -50%);
+                display: none;
                 
             }
             #forward-button {
-                position: absolute;
-                top: 50%;
-                left: 70%;
-                transform: translate(-50%, -50%);
-                
+                display: none;
             }
             .volume-button {
                 display: none;
             }
         }
         .title {
-            flex-basis: 0%;
-            p {
-                position: absolute;
-                top: 30px;
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 15px;
-            }
+            display: none;
         }
         .controls-right {
 
-            flex-basis: 100%;
+            // flex-basis: 100%;
 
             #next-episode {
                 
-                position: absolute;
-                left: 10%;
-                transform: translateX(-50%);
-                margin: 0;
+                // position: absolute;
+                // left: 10%;
+                // transform: translateX(-50%);
+                // margin: 0;
             }
             #list-episodes-button {
                 
-                position: absolute;
-                left: 75%;
-                transform: translateX(-50%);
-                margin: -12px 0 0 0;
+                // position: absolute;
+                // left: 75%;
+                // transform: translateX(-50%);
+                // margin: -12px 0 0 0;
                 
             }
     
             .time-display {
-                position: absolute;
-                left: 50%;
-                transform: translateX(-50%);
-                margin: 0;
+                // position: absolute;
+                // left: 50%;
+                // transform: translateX(-50%);
+                // margin: 0;
             }
             .fullscreen-button {
             }

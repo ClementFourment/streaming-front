@@ -11,7 +11,7 @@
                 <div class="col s6 m4 l4">
                     <div class="card" [routerLink]="['/video', source.title]">
                         <div class="card-image">
-                            <img [src]="source.img">
+                            <img [src]="source.img" >
                         </div>
                         <div id="nbEpisodes">{{ source.nbEpisodes }} épisode{{source.nbEpisodes > 0 ? 's' : ''}}</div>
                         <div class="center">

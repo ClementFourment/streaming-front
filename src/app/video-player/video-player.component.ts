@@ -62,16 +62,34 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']);
     }
-    
+    console.log(this.authService.currentUser)
+    console.log(this.authService.isAuthenticated())
     this.interactionService.initListenInteractions();
 
 
 
     this.videoTitle = this.route.snapshot.paramMap.get('title');
-    this.sources = this.videoService.sources;
-    if (this.sources && this.videoTitle) {
-      this.nbEpisodes = this.sources.find(source => source.title == this.videoTitle)?.nbEpisodes;
+    if (!this.videoService.sources) {
+      this.videoService.getSources().subscribe({
+        next: (response: { sources: {title: string, img: string, nbEpisodes: number}[]}) => {
+          this.videoService.sources = response.sources;
+          this.sources = this.videoService.sources;
+          this.nbEpisodes = this.sources.find(source => source.title == this.videoTitle)?.nbEpisodes;
+        },
+        error: (err) => {
+          console.log(`Erreur : ${err?.error?.message || 'Un problème est survenu. Impossible de récupérer les sources'}`);
+        }
+      });
     }
+    else {
+      this.sources = this.videoService.sources;
+      if (this.sources && this.videoTitle) {
+        this.nbEpisodes = this.sources.find(source => source.title == this.videoTitle)?.nbEpisodes;
+      }
+    }
+    
+    
+    console.log(this.nbEpisodes)
     if (this.sources) {
       this.checkTitle();
       this.getUrl();
@@ -151,14 +169,31 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const savedUrl = localStorage.getItem(`ep_${this.episode}`);
+    let savedUrl!: string | undefined;
+    const item = localStorage.getItem(`ti_${this.videoTitle}_ep_${this.episode}`);
+    if (item) {
+      let parsed;
+      try {
+        parsed = JSON.parse(item);
+      }
+      catch(e) {
+        localStorage.removeItem(`ep_${this.episode}`);
+      }
+      if (parsed && Date.now() < parsed.expiresAt) {
+        savedUrl = parsed.value;
+      } 
+      else {
+        localStorage.removeItem(`ep_${this.episode}`);
+      }
+    }
     if (savedUrl) {
       this.initVideo(savedUrl);
       return;
     }
     this.videoService.getUrl(this.videoTitle, String(this.episode)).subscribe({
       next: (response: {url: string}) => {
-        localStorage.setItem(`ep_${this.episode}`, response.url);
+        const expiresAt = Date.now() + 5 * 60 * 60 * 1000;
+        localStorage.setItem(`ti_${this.videoTitle}_ep_${this.episode}`, JSON.stringify({ value: response.url, expiresAt }));
         this.initVideo(response.url);
       },
       error: (err) => {
@@ -318,10 +353,14 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
         this.videoService.updateWatchProgress(this.videoTitle, this.currentTime, this.episode);
       }
     });
-
-    this.volume = this.videoElement.nativeElement.volume;
-    this.volume = this.volume;
-
+    const localVolume = localStorage.getItem('volume');
+    if (localVolume) {
+      this.volume = +localVolume;
+    }
+    else {
+      this.volume = this.videoElement.nativeElement.volume;
+    }
+    this.videoElement.nativeElement.volume = this.volume;
     this.storeNextEpisodeUrl();
   }
   storeNextEpisodeUrl(){
@@ -330,8 +369,9 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     }
     this.videoService.getUrl(this.videoTitle, String(this.episode + 1)).subscribe({
       next: (response: {url: string}) => {
-        const nextEpisodeKey = `ep_${this.episode + 1}`;
-        localStorage.setItem(nextEpisodeKey , response.url)
+        const nextEpisodeKey = `ti_${this.videoTitle}_ep_${this.episode + 1}`;
+        const expiresAt = Date.now() + 5 * 60 * 60 * 1000;
+        localStorage.setItem(nextEpisodeKey, JSON.stringify({ value: response.url, expiresAt }));
       },
       error: (err) => {
         console.log(`Erreur : ${err?.error?.message || 'Un problème est survenu.'}`);
@@ -371,6 +411,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     this.volume = this.videoElement.nativeElement.volume;
     this.isMuted = this.volume === 0;
     this.videoElement.nativeElement.muted = this.isMuted;
+    localStorage.setItem('volume', String(this.volume));
   }
 
   seekVideo(event: MouseEvent): void {
@@ -482,24 +523,24 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
   handleArrowUp(): void {
     if (this.volume <= 0.9) {
       this.volume = this.volume + 0.10;
-      
+      localStorage.setItem('volume', String(this.volume));
     }
     else {
       this.volume = 1;
+      localStorage.setItem('volume', String(this.volume));
     }
-    this.videoElement.nativeElement.volume = this.volume;
     this.videoElement.nativeElement.volume = this.volume;
   }
 
   handleArrowDown(): void {
     if (this.volume >= 0.1) {
       this.volume = this.volume - 0.10;
-      
+      localStorage.setItem('volume', String(this.volume));
     }
     else {
       this.volume = 0;
+      localStorage.setItem('volume', String(this.volume));
     }
-    this.videoElement.nativeElement.volume = this.volume;
     this.videoElement.nativeElement.volume = this.volume;
   }
   rewindVideo() {

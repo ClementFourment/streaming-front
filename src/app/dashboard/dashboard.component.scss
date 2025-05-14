@@ -7,7 +7,17 @@
 .card-container {
 
 }
-
+.card-image {
+    height: 140px;
+    overflow: hidden;
+    img {
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%);
+        height: 100%;
+        width:fit-content;
+    }
+}
 .card {
     position: relative;
     background-color: #121212;
