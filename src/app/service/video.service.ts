@@ -21,6 +21,7 @@ export class VideoService {
     }
 
     getUrl(title: string, episode: string): Observable<any> {
+        
         return this.http.get<any>(`${this.api.apiUrl}/get-temporary-url?title=${title}&episode=${episode}`, {
           headers: this.NGROK_HEADER
         });;

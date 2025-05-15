@@ -15,7 +15,7 @@ export const routes: Routes = [
     { path: 'login', component: AuthComponent },
     { path: 'dashboard', component: DashboardComponent },
     { path: '', component: HomeComponent },
-    { path: '**', redirectTo: '', pathMatch: 'full' }
+    // { path: '**', redirectTo: '', pathMatch: 'full' }
 
 
 

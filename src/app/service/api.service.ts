@@ -5,5 +5,10 @@ import { Injectable } from '@angular/core';
 })
 export class ApiService {
 
-  public apiUrl = 'https://3eef-2a04-cec2-b-c01a-b161-1e7-5775-652c.ngrok-free.app';//'http://localhost:3000';
+  private isLocal = false;
+  private apiUrls = [
+    'https://d4d8-2a04-cec2-b-9e25-7439-f02c-ed0c-a7ae.ngrok-free.app',
+    'http://localhost:3000'
+  ];
+  public apiUrl = this.apiUrls[+this.isLocal];
 }

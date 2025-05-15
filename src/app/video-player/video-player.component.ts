@@ -195,6 +195,7 @@ export class VideoPlayerComponent implements OnInit, OnDestroy {
     }
     this.videoService.getUrl(this.videoTitle, String(this.episode)).subscribe({
       next: (response: {url: string}) => {
+        console.log(response.url)
         const expiresAt = Date.now() + 5 * 60 * 60 * 1000;
         localStorage.setItem(`ti_${this.videoTitle}_ep_${this.episode}`, JSON.stringify({ value: response.url, expiresAt }));
         this.initVideo(response.url);
