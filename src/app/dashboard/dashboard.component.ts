@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { AuthService } from '../service/auth.service';
 import { Router, RouterLink } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -11,11 +11,11 @@ import { FormTitlePipe } from '../service/form-title.pipe';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, AfterViewInit {
 
   sources !: {title: string, img: string, nbEpisodes: number}[];
   test: boolean = false;
-
+  @ViewChild('iframe') iframe!: ElementRef<HTMLIFrameElement>;
   constructor(private videoService: VideoService, private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
@@ -34,8 +34,21 @@ export class DashboardComponent implements OnInit {
         console.log(`Erreur : ${err?.error?.message || 'Un problème est survenu. Impossible de récupérer les sources'}`);
       }
     });
+
+    window.addEventListener('message', (event) => {
+      if (event.data?.action === 'hideIframe') {
+        this.iframe.nativeElement.style.display = 'none';
+      }
+    });
+    
+
+
+  }
+  ngAfterViewInit() {
+    
   }
   activateVideo(title: string) {
 
   }
+  
 }
